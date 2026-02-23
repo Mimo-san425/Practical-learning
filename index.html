@@ -1,1 +1,222 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>感想をレベルアップさせよう</title>
+
+<style>
+body{
+  font-family:"UD デジタル 教科書体 N-R","Hiragino Sans","Noto Sans JP",sans-serif;
+  background:#fafafa;
+}
+.sheet{
+  max-width:900px;
+  margin:20px auto;
+  background:#fff;
+  border:1px solid #ccc;
+  border-radius:12px;
+  padding:20px;
+}
+h1{margin-top:0}
+
+.step{
+  border:1px solid #ddd;
+  border-radius:10px;
+  padding:15px;
+  margin-bottom:15px;
+}
+
+textarea,input[type=text]{
+  width:100%;
+  font-size:16px;
+  padding:8px;
+  border-radius:6px;
+  border:1px solid #bbb;
+  box-sizing:border-box;
+}
+textarea{min-height:90px}
+
+#result{
+  min-height:300px;
+}
+
+.radio-group label{
+  display:block;
+  margin:6px 0;
+  cursor:pointer;
+}
+
+ruby rt{
+  font-size:0.55em;
+}
+
+button{
+  padding:10px 14px;
+  font-size:14px;
+  border-radius:8px;
+  border:1px solid #aaa;
+  background:#f5f5f5;
+  cursor:pointer;
+  margin-right:6px;
+}
+
+/* 印刷（PDF）用 */
+@media print{
+  button{display:none;}
+  body{background:#fff;}
+  .sheet{border:none;}
+}
+</style>
+</head>
+
+<body>
+<div class="sheet">
+
+  <h1>
+    <ruby>レベルアップ<rt>れべるあっぷ</rt></ruby>した
+    <ruby>感想<rt>かんそう</rt></ruby>を
+    <ruby>書<rt>か</rt></ruby>こう
+  </h1>
+
+  <h2>① <ruby>作業学習<rt>さぎょうがくしゅう</rt></ruby>はなんですか？</h2>
+  <div class="step">
+    <div class="radio-group">
+      <label><input type="radio" name="choice" value="手工芸"><ruby>手工芸<rt>しゅこうげい</rt></ruby></label>
+      <label><input type="radio" name="choice" value="園芸"><ruby>園芸<rt>えんげい</rt></ruby></label>
+      <label><input type="radio" name="choice" value="陶工"><ruby>陶工<rt>とうこう</rt></ruby></label>
+      <label><input type="radio" name="choice" value="リサイクル">リサイクル</label>
+      <label><input type="radio" name="choice" value="工芸"><ruby>工芸<rt>こうげい</rt></ruby></label>
+    </div>
+  </div>
+
+  <div class="step">
+    <h2>② <ruby>作業<rt>さぎょう</rt></ruby>でやったことを<ruby>書<rt>か</rt></ruby>きましょう</h2>
+    <p style="margin:6px 0 8px; color:#444;">
+      ※「しました」を<em>つけない</em>で書きます（例：<u>コップに模様をつける</u>／<u>花に水やり</u>）
+    </p>
+    <input type="text" id="action" placeholder="例）コップに模様をつける／苗を植える／ラベルをはる">
+  </div>
+
+  <div class="step">
+    <h2>④ そのときの<ruby>気持<rt>きも</rt></ruby>ちを<ruby>選<rt>えら</rt></ruby>びましょう（1つ）</h2>
+    <div class="radio-group" id="feelingRadios">
+      <label><input type="radio" name="feeling" value="うれしかった">うれしかった</label>
+      <label><input type="radio" name="feeling" value="たのしかった">たのしかった</label>
+      <label><input type="radio" name="feeling" value="がんばれた">がんばれた</label>
+      <label><input type="radio" name="feeling" value="むずかしかった">むずかしかった</label>
+      <label><input type="radio" name="feeling" value="くやしかった">くやしかった</label>
+      <label><input type="radio" name="feeling" value="つぎもやってみたい">つぎもやってみたい</label>
+      <label style="margin-top:8px;">
+        <input type="radio" name="feeling" value="__other__" id="feelingOtherRadio"> その他：
+        <input type="text" id="feelingOtherText" placeholder="自由に入力" style="width:60%; margin-left:6px;" disabled>
+      </label>
+    </div>
+  </div>
+
+  <!-- ★ 新規追加：⑤ 理由 -->
+  <div class="step">
+    <h2>⑤ その<ruby>気持<rt>きも</rt></ruby>ちの<ruby>理由<rt>りゆう</rt></ruby>を<ruby>書<rt>か</rt></ruby>きましょう</h2>
+    <input type="text" id="reason" placeholder="例）思ったとおりにできたから／友だちと協力できたから／時間内に終わらなかったから">
+  </div>
+
+  <div class="step">
+    <h2><ruby>感想<rt>かんそう</rt></ruby>のまとめ</h2>
+    <button type="button" onclick="build()">まとめる</button>
+    <button type="button" onclick="makePDF()">PDFにする</button>
+    <textarea id="result" readonly placeholder="ここに文章が表示されます"></textarea>
+  </div>
+
+</div>
+
+<script>
+/* ④「その他」を選んだときだけテキスト入力を有効化 */
+(function(){
+  const radios = document.querySelectorAll('input[name="feeling"]');
+  const otherRadio = document.getElementById('feelingOtherRadio');
+  const otherText  = document.getElementById('feelingOtherText');
+
+  function syncOther(){
+    const selected = document.querySelector('input[name="feeling"]:checked');
+    const isOther = selected && selected.value === '__other__';
+    otherText.disabled = !isOther;
+    if(!isOther){ otherText.value = ""; }
+    if(isOther){ otherText.focus(); }
+  }
+
+  radios.forEach(r => r.addEventListener('change', syncOther));
+})();
+
+function build(){
+  const actionRaw = document.getElementById("action").value.trim();
+  const reasonRaw = document.getElementById("reason").value.trim();
+  const g = document.querySelector('input[name="choice"]:checked');
+
+  // ④ 単一選択の気持ち
+  const f = document.querySelector('input[name="feeling"]:checked');
+  const otherText = document.getElementById('feelingOtherText').value.trim();
+
+  let text = [];
+
+  // ① 作業学習
+  if(g){
+    text.push(`わたしは「${g.value}」の作業学習をしました。`);
+  }
+
+  // ② やったこと → 「…をしました。」に自動整形
+  if(actionRaw){
+    const action = normalizeActionToSuru(actionRaw);
+    if(g){
+      text.push(`その作業で、${action}をしました。`);
+    } else {
+      text.push(`${action}をしました。`);
+    }
+  }
+
+  // ④ 気持ち（単一）
+  let feelingOut = "";
+  if(f){
+    feelingOut = f.value === '__other__' ? (otherText || "") : f.value;
+    if(feelingOut){
+      text.push(`そのときの気持ちは、${feelingOut}です。`);
+    }
+  }
+
+  // ⑤ 理由（あれば追加）→ 「その理由は、〜です。」
+  const reason = normalizeReason(reasonRaw);
+  if(reason){
+    text.push(`その理由は、${reason}です。`);
+  }
+
+  document.getElementById("result").value = text.join("\n\n");
+}
+
+/**
+ * ②の入力を「〜をしました」に自然につなぐための軽い前処理
+ * - 文末の句点削除
+ * - 「しました／した／して／する」等の重複を避ける
+ */
+function normalizeActionToSuru(str){
+  let s = str.replace(/[。．.]+$/,'').trim();
+  s = s.replace(/(しました|した|して|する)\s*$/,'').trim();
+  return s || str.trim();
+}
+
+/**
+ * ⑤ 理由の末尾句点の整理（「〜から」「〜ため」などでもOK）
+ * - 末尾の句点を削るだけに留め、文意は保持
+ */
+function normalizeReason(str){
+  return str.replace(/[。．.]+$/,'').trim();
+}
+
+/* PDF化 */
+function makePDF(){
+  build();
+  window.print();
+}
+</script>
+
+</body>
+</html>
 
